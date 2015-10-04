@@ -1,8 +1,24 @@
 ---
 - hosts: all
+  sudo: yes
   tasks:
+    - name: Ensure yum-managed system packages installed
+      yum: state=present name={{ item }}
+      with_items:
+        - epel-release
+        - psmisc
+    - name: Ensure yum-managed user packages installed
+      yum: state=present name={{ item }}
+      with_items:
+        - firefox
+        - xterm
+        - xorg-x11-utils
+        - strace
+        - screen
+        - bzip2
+        - tigervnc
+        - tigervnc-server
     - name: Ensure PXE-related packages are present
       yum: state=present name={{ item }}
-      sudo: yes
       with_items:
         - syslinux
