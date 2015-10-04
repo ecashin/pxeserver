@@ -1,0 +1,8 @@
+---
+- hosts: all
+  tasks:
+    - name: Ensure PXE-related packages are present
+      yum: state=present name={{ item }}
+      sudo: yes
+      with_items:
+        - syslinux
