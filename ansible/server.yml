@@ -28,3 +28,9 @@
     # Set forwarding in /proc and in the sysctl file, reloading if necessary
     - name: Turn on IPv4 forwarding
       sysctl: name="net.ipv4.ip_forward" value=1 sysctl_set=yes state=present reload=yes
+
+    # Set up firewalld zones for IP masquerading
+    - shell: firewall-cmd --zone=internal --change-interface=eth0 --permanent
+    - shell: firewall-cmd --zone=external --change-interface=eth1 --permanent
+    - shell: firewall-cmd --zone=external --add-masquerade --permanent
+    - shell: firewall-cmd --reload
