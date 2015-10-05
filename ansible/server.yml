@@ -5,7 +5,9 @@
     - name: Ensure yum-managed system packages installed
       yum: state=present name={{ item }}
       with_items:
+        - dnsmasq
         - epel-release
+        - firewalld
         - psmisc
     - name: Ensure yum-managed user packages installed
       yum: state=present name={{ item }}
@@ -22,3 +24,7 @@
       yum: state=present name={{ item }}
       with_items:
         - syslinux
+
+    # Set forwarding in /proc and in the sysctl file, reloading if necessary
+    - name: Turn on IPv4 forwarding
+      sysctl: name="net.ipv4.ip_forward" value=1 sysctl_set=yes state=present reload=yes
