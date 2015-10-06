@@ -1,51 +1,60 @@
 ---
 - hosts: all
+  vars:
+    - pxeserver: 10.10.10.1
   sudo: yes
   tasks:
-    - name: Ensure yum-managed system packages installed
-      yum: state=present name={{ item }}
-      with_items:
-        - dnsmasq
-        - epel-release
-        - firewalld
-        - psmisc
-    - name: Ensure yum-managed user packages installed
-      yum: state=present name={{ item }}
-      with_items:
-        - firefox
-        - xterm
-        - xorg-x11-utils
-        - strace
-        - screen
-        - bzip2
-        - tigervnc
-        - tigervnc-server
-    - name: Ensure PXE-related packages are present
-      yum: state=present name={{ item }}
-      with_items:
-        - syslinux
-        - tftp-server
-
-    # Set forwarding in /proc and in the sysctl file, reloading if necessary
-    - name: Turn on IPv4 forwarding
-      sysctl: name="net.ipv4.ip_forward" value=1 sysctl_set=yes state=present reload=yes
-
-    # Set up firewalld zones for IP masquerading
-    - shell: firewall-cmd --zone=internal --change-interface=eth0 --permanent
-    - shell: firewall-cmd --zone=external --change-interface=eth1 --permanent
-    - shell: firewall-cmd --zone=external --add-masquerade --permanent
-    - shell: firewall-cmd --zone=internal --add-service={{ item }} --permanent
-      with_items:
-        - dns
-        - http
-        - https
-        - mountd
-        - nfs
-        - ntp
-        - rpc-bind
-        - tftp
-        - tftp-client
-    - shell: firewall-cmd --reload
+#    - name: Ensure yum-managed system packages installed
+#      yum: state=present name={{ item }}
+#      with_items:
+#        - dnsmasq
+#        - epel-release
+#        - firewalld
+#        - psmisc
+#    - name: Ensure yum-managed user packages installed
+#      yum: state=present name={{ item }}
+#      with_items:
+#        - firefox
+#        - xterm
+#        - xorg-x11-utils
+#        - strace
+#        - screen
+#        - bzip2
+#        - tigervnc
+#        - tigervnc-server
+#    - name: Ensure PXE-related packages are present
+#      yum: state=present name={{ item }}
+#      with_items:
+#        - syslinux
+#        - tftp-server
+#
+#    # Set forwarding in /proc and in the sysctl file, reloading if necessary
+#    - name: Turn on IPv4 forwarding
+#      sysctl: name="net.ipv4.ip_forward" value=1 sysctl_set=yes state=present reload=yes
+#
+#    # Set up firewalld zones for IP masquerading
+#    - shell: firewall-cmd --zone=internal --change-interface=eth0 --permanent
+#    - shell: firewall-cmd --zone=external --change-interface=eth1 --permanent
+#    - shell: firewall-cmd --zone=external --add-masquerade --permanent
+#    - shell: firewall-cmd --zone=internal --add-service={{ item }} --permanent
+#      with_items:
+#        - dns
+#        - http
+#        - https
+#        - mountd
+#        - nfs
+#        - ntp
+#        - rpc-bind
+#        - tftp
+#        - tftp-client
+#    - shell: firewall-cmd --reload
 
     - name: Install dnsmasq configuration
-      copy: dest=/etc/dnsmasq.conf src=dnsmasq.conf
+      template: dest=/etc/dnsmasq.conf src=dnsmasq.conf
+
+    - name: Create directory for pxelinux configs
+      file: path=/var/lib/tftpboot/pxelinux.cfg state=directory
+    - name: Create symlink for pxelinux configs
+      file: src=/var/lib/tftpboot/pxelinux.cfg dest=/usr/share/syslinux/pxelinux.cfg state=link
+    - name: Copy default pxelinux config
+      template: src=default dest=/var/lib/tftpboot/pxelinux.cfg/default
