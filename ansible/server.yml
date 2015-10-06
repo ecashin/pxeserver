@@ -33,4 +33,18 @@
     - shell: firewall-cmd --zone=internal --change-interface=eth0 --permanent
     - shell: firewall-cmd --zone=external --change-interface=eth1 --permanent
     - shell: firewall-cmd --zone=external --add-masquerade --permanent
+    - shell: firewall-cmd --zone=internal --add-service={{ item }} --permanent
+      with_items:
+        - dns
+        - http
+        - https
+        - mountd
+        - nfs
+        - ntp
+        - rpc-bind
+        - tftp
+        - tftp-client
     - shell: firewall-cmd --reload
+
+    - name: Install dnsmasq configuration
+      copy: dest=/etc/dnsmasq.conf src=dnsmasq.conf
