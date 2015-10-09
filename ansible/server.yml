@@ -130,3 +130,17 @@
       args:
         chdir: "{{ home }}/{{ mhttpd_dir }}"
       when: st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}"
+
+    - name: Ensure mini_httpd systemd service file
+      copy:
+        src: mini_httpd.service
+        dest: /usr/lib/systemd/system/mini_httpd.service
+    - name: Ensure mini_httpd systemd service link
+      file:
+        dest: /etc/systemd/system/multi-user.target.wants/mini_httpd.service
+        src: /usr/lib/systemd/system/mini_httpd.service
+        state: link
+    - name: Ensure mini_httpd service enabled
+      service: name=mini_httpd enabled=yes
+    - name: Ensure mini_httpd service started
+      service: name=mini_httpd state=started
