@@ -1,0 +1,7 @@
+[Unit]
+Description=mini_httpd Server
+
+[Service]
+ExecStart=/usr/local/sbin/mini_httpd -C /dev/null -D -p 80 -d / -dd /mnt -l /var/log/mini_httpd.log -i /var/run/mini_httpd.pid -h 10.10.10.1
+
+
