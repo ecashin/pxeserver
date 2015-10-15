@@ -7,14 +7,16 @@
     - c7file: CentOS-7-x86_64-DVD-1503-01.iso
     - c7md5: 99e450fb1b22d2e528757653fcbf5fdc
     - c7sha256: 85bcf62462fb678adc0cec159bf8b39ab5515404bc3828c432f743a1b0b30157
+    - pxesrv_active: no
     - mhttpd_path: /usr/local/sbin
     - mhttpd_md5: c9f3131179351ff5267a2aa6adb9e1d3
     - mhttpd_sha256: 0829969f6e8cd7263dfc0eeeaddc92b9a564c7a68bc72b2d1b4af6c2198d9931
     - mhttpd_rpath: http://acme.com/software/mini_httpd
     - mhttpd_dir: mini_httpd-1.21
     - mhttpd_tgz: "{{ mhttpd_dir }}.tar.gz"
+    - mhttpd_active: no
   sudo: yes
-  tasks:
+  pre_tasks:
     - name: Ensure yum-managed system packages installed
       yum: state=present name={{ item }}
       with_items:
@@ -23,23 +25,18 @@
         - firewalld
         - psmisc
         - rsync
-#    - name: Ensure yum-managed user packages installed
-#      yum: state=present name={{ item }}
-#      with_items:
-#        - firefox
-#        - xterm
-#        - xorg-x11-utils
-#        - strace
-#        - screen
-#        - bzip2
-#        - tigervnc
-#        - tigervnc-server
-#    - name: Ensure PXE-related packages are present
-#      yum: state=present name={{ item }}
-#      with_items:
-#        - syslinux
-#        - tftp-server
-#
+    - name: Ensure yum-managed user packages installed
+      yum: state=present name={{ item }}
+      with_items:
+        - firefox
+        - xterm
+        - xorg-x11-utils
+        - strace
+        - screen
+        - bzip2
+        - tigervnc
+        - tigervnc-server
+
 #    # Set forwarding in /proc and in the sysctl file, reloading if necessary
 #    - name: Turn on IPv4 forwarding
 #      sysctl: name="net.ipv4.ip_forward" value=1 sysctl_set=yes state=present reload=yes
@@ -66,81 +63,6 @@
 #    - name: Ensure dnsmasq service runs
 #      service: name=dnsmasq enabled=yes state=started
 #
-#    - name: Create directory for pxelinux configs
-#      file: path=/var/lib/tftpboot/pxelinux.cfg state=directory
-#    - name: Create symlink for pxelinux configs
-#      file: src=/var/lib/tftpboot/pxelinux.cfg dest=/usr/share/syslinux/pxelinux.cfg state=link
-#    - name: Copy default pxelinux config
-#      template: src=default dest=/var/lib/tftpboot/pxelinux.cfg/default
-#    - name: Create directory for CentOS kernel and initrd
-#      file: path=/var/lib/tftpboot/centos7 state=directory
-#    - name: Create symlink for CentOS kernel and initrd
-#      file: src=/var/lib/tftpboot/centos7 dest=/usr/share/syslinux/centos7 state=link
-#    - name: Ensure CentOS 7 iso directory
-#      file: path={{ home }}/iso state=directory
-#    - name: Check for CentOS 7 ISO
-#      stat: path={{ home }}/iso/{{ c7file }} get_checksum=false get_md5=true
-#      register: st
-#    - name: Download CentOS 7 DVD ISO
-#      get_url:
-#        dest: "{{ home }}/iso/{{ c7file }}"
-#        url: "{{ c7rpath }}/{{ c7file }}"
-#        sha256sum: "{{ c7sha256 }}"
-#      when: st.stat.md5 is not defined or st.stat.md5 != "{{ c7md5 }}"
-#    - name: Ensure mountpoint for CentOS 7 DVD ISO
-#      file: path=/mnt/centos7 state=directory
-#    - name: Ensure CentOS 7 DVD ISO mounted
-#      mount:
-#        name: /mnt/centos7
-#        src: "{{ home }}/iso/{{ c7file }}"
-#        opts: loop
-#        fstype: iso9660
-#        state: mounted
-#    - name: Copy CentOS kernel and initrd to TFTP area
-#      command: rsync /mnt/centos7/images/pxeboot/{{ item }} /var/lib/tftpboot/centos7
-#      with_items:
-#        - vmlinuz
-#        - initrd.img
-    - name: Check for mini_httpd
-      sudo: false
-      stat: path={{ mhttpd_path }}/mini_httpd get_checksum=false get_md5=true
-      register: st
-    - name: Download mini_httpd tarball
-      sudo: false
-      get_url:
-        dest: "{{ home }}/{{ mhttpd_tgz }}"
-        url: "{{ mhttpd_rpath }}/{{ mhttpd_tgz }}"
-        sha256sum: "{{ mhttpd_sha256 }}"
-      when: st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}"
-    - name: Unpack mini_httpd tarball
-      sudo: false
-      unarchive:
-        copy: no
-        dest: "{{ home }}"
-        src: "{{ home }}/{{ mhttpd_tgz }}"
-      when: st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}"
-    - name: Build mini_httpd
-      sudo: false
-      command: make CDEFS=-DHAVE_INT64T=1
-      args:
-        chdir: "{{ home }}/{{ mhttpd_dir }}"
-      when: st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}"
-    - name: Install mini_httpd
-      command: make CDEFS=-DHAVE_INT64T=1 install
-      args:
-        chdir: "{{ home }}/{{ mhttpd_dir }}"
-      when: st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}"
-
-    - name: Ensure mini_httpd systemd service file
-      copy:
-        src: mini_httpd.service
-        dest: /usr/lib/systemd/system/mini_httpd.service
-    - name: Ensure mini_httpd systemd service link
-      file:
-        dest: /etc/systemd/system/multi-user.target.wants/mini_httpd.service
-        src: /usr/lib/systemd/system/mini_httpd.service
-        state: link
-    - name: Ensure mini_httpd service enabled
-      service: name=mini_httpd enabled=yes
-    - name: Ensure mini_httpd service started
-      service: name=mini_httpd state=started
+  roles:
+    - pxesrv
+    - mini_httpd

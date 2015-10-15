@@ -1,0 +1,48 @@
+- name: Check for mini_httpd
+  sudo: false
+  stat: path={{ mhttpd_path }}/mini_httpd get_checksum=false get_md5=true
+  register: st
+  when: mhttpd_active
+- name: Download mini_httpd tarball
+  sudo: false
+  get_url:
+    dest: "{{ home }}/{{ mhttpd_tgz }}"
+    url: "{{ mhttpd_rpath }}/{{ mhttpd_tgz }}"
+    sha256sum: "{{ mhttpd_sha256 }}"
+  when: mhttpd_active and (st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}")
+- name: Unpack mini_httpd tarball
+  sudo: false
+  unarchive:
+    copy: no
+    dest: "{{ home }}"
+    src: "{{ home }}/{{ mhttpd_tgz }}"
+  when: mhttpd_active and (st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}")
+- name: Build mini_httpd
+  sudo: false
+  command: make CDEFS=-DHAVE_INT64T=1
+  args:
+    chdir: "{{ home }}/{{ mhttpd_dir }}"
+  when: mhttpd_active and (st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}")
+- name: Install mini_httpd
+  command: make CDEFS=-DHAVE_INT64T=1 install
+  args:
+    chdir: "{{ home }}/{{ mhttpd_dir }}"
+  when: mhttpd_active and (st.stat.md5 is not defined or st.stat.md5 != "{{ mhttpd_md5 }}")
+
+- name: Ensure mini_httpd systemd service file
+  copy:
+    src: mini_httpd.service
+    dest: /usr/lib/systemd/system/mini_httpd.service
+  when: mhttpd_active
+- name: Ensure mini_httpd systemd service link
+  file:
+    dest: /etc/systemd/system/multi-user.target.wants/mini_httpd.service
+    src: /usr/lib/systemd/system/mini_httpd.service
+    state: link
+  when: mhttpd_active
+- name: Ensure mini_httpd service enabled
+  service: name=mini_httpd enabled=yes
+  when: mhttpd_active
+- name: Ensure mini_httpd service started
+  service: name=mini_httpd state=started
+  when: mhttpd_active
