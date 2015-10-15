@@ -29,14 +29,15 @@
     - name: Ensure yum-managed user packages installed
       yum: state=present name={{ item }}
       with_items:
-        - firefox
-        - xterm
-        - xorg-x11-utils
-        - strace
-        - screen
         - bzip2
+        - firefox
+        - lynx
+        - screen
+        - strace
         - tigervnc
         - tigervnc-server
+        - xorg-x11-utils
+        - xterm
 
 #    # Set forwarding in /proc and in the sysctl file, reloading if necessary
 #    - name: Turn on IPv4 forwarding
