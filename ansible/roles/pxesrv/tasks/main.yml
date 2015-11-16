@@ -3,14 +3,18 @@
   with_items:
     - syslinux
     - tftp-server
+    - tftp
   when: pxesrv_active
 
 - name: Create directory for pxelinux configs
   file: path=/var/lib/tftpboot/pxelinux.cfg state=directory
   when: pxesrv_active
 
-- name: Create symlink for pxelinux configs
-  file: src=/var/lib/tftpboot/pxelinux.cfg dest=/usr/share/syslinux/pxelinux.cfg state=link
+- name: Create directory for pxelinux configs bind mount
+  file: path=/usr/share/syslinux/{{ item }} state=directory
+  with_items:
+    - pxelinux.cfg
+    - centos7
   when: pxesrv_active
 
 - name: Copy default pxelinux config
@@ -21,9 +25,15 @@
   file: path=/var/lib/tftpboot/centos7 state=directory
   when: pxesrv_active
 
-- name: Create symlink for CentOS kernel and initrd
-  file: src=/var/lib/tftpboot/centos7 dest=/usr/share/syslinux/centos7 state=link
+- name: Create bind mount for CentOS kernel and initrd, pxelinux.cfg
+  mount: src=/var/lib/tftpboot/{{ item }} name=/usr/share/syslinux/{{ item }} fstype=none opts=bind state=mounted
+  with_items:
+    - centos7
+    - pxelinux.cfg
   when: pxesrv_active
+
+- name: Create lame symlink because I cannot stop client from using server IP
+  file: src=/usr/share/syslinux/pxelinux.0 dest=/usr/share/syslinux/10.10.10.1.0 state=link
 
 - name: Ensure CentOS 7 iso directory
   file: path={{ home }}/iso state=directory

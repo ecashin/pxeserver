@@ -7,7 +7,7 @@
     - c7file: CentOS-7-x86_64-DVD-1503-01.iso
     - c7md5: 99e450fb1b22d2e528757653fcbf5fdc
     - c7sha256: 85bcf62462fb678adc0cec159bf8b39ab5515404bc3828c432f743a1b0b30157
-    - firewall_active: yes
+    - firewall_active: no
     - pxesrv_active: no
     - mhttpd_path: /usr/local/sbin
     - mhttpd_md5: c9f3131179351ff5267a2aa6adb9e1d3
@@ -44,11 +44,11 @@
 #    # Set forwarding in /proc and in the sysctl file, reloading if necessary
 #    - name: Turn on IPv4 forwarding
 #      sysctl: name="net.ipv4.ip_forward" value=1 sysctl_set=yes state=present reload=yes
-#    - name: Install dnsmasq configuration
-#      template: dest=/etc/dnsmasq.conf src=dnsmasq.conf
-#    - name: Ensure dnsmasq service runs
-#      service: name=dnsmasq enabled=yes state=started
-#
+    - name: Install dnsmasq configuration
+      template: dest=/etc/dnsmasq.conf src=dnsmasq.conf
+    - name: Ensure dnsmasq service runs
+      service: name=dnsmasq enabled=yes state=started
+
   roles:
     - firewall
     - pxesrv
