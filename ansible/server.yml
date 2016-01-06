@@ -3,6 +3,10 @@
   vars:
     - home: "{{ lookup('env', 'HOME') }}"
     - pxeserver: 10.10.10.1
+    - c67rpath: http://centos.crazyfrogs.org/6.7/isos/x86_64/
+    - c67file: CentOS-6.7-x86_64-bin-DVD1.iso
+    - c67md5: 51f90e8ddd2ea199780065eaf75130ad
+    - c67sha256: c0c1a05d3d74fb093c6232003da4b22b0680f59d3b2fa2cb7da736bc40b3f2c5
     - c7rpath: http://mirror.atlanticmetro.net/centos/7/isos/x86_64/
     - c7file: CentOS-7-x86_64-DVD-1503-01.iso
     - c7md5: 99e450fb1b22d2e528757653fcbf5fdc
